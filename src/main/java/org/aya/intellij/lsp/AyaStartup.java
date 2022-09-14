@@ -1,11 +1,14 @@
 package org.aya.intellij.lsp;
 
+import com.google.gson.JsonParseException;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.aya.generic.Constants;
+import org.aya.intellij.AyaBundle;
+import org.aya.intellij.notification.AyaNotification;
 import org.aya.intellij.service.AyaSettingService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +19,17 @@ public class AyaStartup implements StartupActivity {
     var ayaJson = findAyaJson(project);
     if (ayaJson != null) {
       if (!JB.fileSupported(ayaJson)) return;
-      AyaLsp.start(ayaJson, project);
+
+      try {
+        AyaLsp.start(ayaJson, project);
+      } catch (JsonParseException e) {
+        // Catch exception from service.registerLibrary -> lsp.registerLibrary
+
+        // Show error
+        AyaNotification.showError(project,
+          AyaBundle.INSTANCE.message("aya.notice.error.lsp.title"),
+          AyaBundle.INSTANCE.message("aya.notice.error.lsp", e.getMessage()));
+      }
     }
   }
 

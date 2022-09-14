@@ -1,6 +1,5 @@
 package org.aya.intellij.lsp;
 
-import com.google.gson.JsonParseException;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -29,8 +28,6 @@ import org.aya.concrete.stmt.Command;
 import org.aya.concrete.stmt.Decl;
 import org.aya.concrete.stmt.Stmt;
 import org.aya.generic.Constants;
-import org.aya.intellij.AyaBundle;
-import org.aya.intellij.notification.AyaNotification;
 import org.aya.intellij.psi.AyaPsiElement;
 import org.aya.intellij.psi.AyaPsiFile;
 import org.aya.intellij.psi.AyaPsiNamedElement;
@@ -80,26 +77,16 @@ public final class AyaLsp extends InMemoryCompilerAdvisor implements AyaLanguage
   private final @NotNull ExecutorService compilerPool = Executors.newFixedThreadPool(1);
 
   static void start(@NotNull VirtualFile ayaJson, @NotNull Project project) {
-    try {
-      Log.i("[intellij-aya] Hello, this is Aya Language Server inside intellij-aya.");
-      var lsp = new AyaLsp(project);
-      lsp.registerLibrary(ayaJson.getParent());
-      lsp.recompile(null);
-      project.putUserData(AYA_LSP, lsp);
-      project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
-        @Override public void after(@NotNull List<? extends VFileEvent> events) {
-          lsp.fireVfsEvent(events);
-        }
-      });
-    } catch (JsonParseException e) {
-      // Catch exception from service.registerLibrary -> lsp.registerLibrary
-      // I am not pretty sure it is good that I place try-catch here...
-
-      // Show error
-      AyaNotification.showError(project,
-        AyaBundle.INSTANCE.message("aya.notice.error.lsp.title"),
-        AyaBundle.INSTANCE.message("aya.notice.error.lsp", e.getMessage()));
-    }
+    Log.i("[intellij-aya] Hello, this is Aya Language Server inside intellij-aya.");
+    var lsp = new AyaLsp(project);
+    lsp.registerLibrary(ayaJson.getParent());
+    lsp.recompile(null);
+    project.putUserData(AYA_LSP, lsp);
+    project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
+      @Override public void after(@NotNull List<? extends VFileEvent> events) {
+        lsp.fireVfsEvent(events);
+      }
+    });
   }
 
   /**
