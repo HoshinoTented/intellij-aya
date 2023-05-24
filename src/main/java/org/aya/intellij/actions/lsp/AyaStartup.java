@@ -7,12 +7,18 @@ import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.aya.generic.Constants;
 import org.aya.intellij.service.AyaSettingService;
+import org.aya.lsp.utils.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AyaStartup implements StartupActivity {
   @Override public void runActivity(@NotNull Project project) {
-    if (!AyaSettingService.getInstance().useAyaLsp) return;
+    if (AyaSettingService.getInstance().ayaLspState == AyaSettingService.AyaState.UseIntegration) {
+      Log.i("Using aya integration, skipping AyaStartup.");
+      return;
+    }
+
+    if (! (AyaSettingService.getInstance().ayaLspState == AyaSettingService.AyaState.Enable)) return;
     var ayaJson = findAyaJson(project);
     if (ayaJson != null) {
       if (!JB.fileSupported(ayaJson)) return;
